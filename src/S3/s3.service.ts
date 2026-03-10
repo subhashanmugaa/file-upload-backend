@@ -1,12 +1,8 @@
 import { S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Injectable } from "@nestjs/common";
-import {UnauthorizedException} from "@nestjs/common";
-import { get } from "http";
-
+import { BadRequestException, UnauthorizedException,Injectable } from "@nestjs/common";
 
 @Injectable()
-
 export class S3Service{
     //s3 instance
     private s3Client:S3Client;
@@ -53,4 +49,19 @@ export class S3Service{
         return url;
     }
 
+    async deleteFile(Filekey:string){
+        try{
+            let command=new DeleteObjectCommand({
+                Bucket:this.bucketName,
+                Key:Filekey,
+            })
+
+            let response=await this.s3Client.send(command);
+            return response;
+        }
+        catch(error){
+            console.error('S3 delete error:', error);
+            throw new BadRequestException('failed to delete file');
+        }
+    }
 }

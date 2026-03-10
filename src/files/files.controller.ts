@@ -28,5 +28,10 @@ export class FilesController {
     return this.filesService.getDownloadUrl(id);
   }
 
+  @Delete(':id')
+  remove(@Param('id',ParseIntPipe) id: number) {
+    return this.filesService.remove(id);
+  }
+
 
 }
