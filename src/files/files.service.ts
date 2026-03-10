@@ -6,12 +6,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { File } from './entities/file.entity';
 import { S3Service } from 'src/S3/s3.service';
 import { User } from 'src/users/entities/user.entity';
-
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 @Injectable()
 export class FilesService {
 
   constructor(@InjectRepository(File) private readonly fileRepository:Repository<File>, 
-  @InjectRepository(User) private readonly userRepository:Repository<User> ,private readonly s3Service:S3Service){
+  @InjectRepository(User) private readonly userRepository:Repository<User> ,
+  private readonly s3Service:S3Service,
+  @InjectQueue('file-processing-queue') private readonly fileProcessingQueue:Queue){
 
   }
 
@@ -42,6 +45,9 @@ export class FilesService {
     //update the file
     file.etag=updateFileDto.etag;
     file.status='UPLOADED';
+    await this.fileProcessingQueue.add('process-file', {
+      fileId: file.id,
+    });
     return this.fileRepository.save(file!);
   }
 

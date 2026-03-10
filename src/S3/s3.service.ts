@@ -1,4 +1,4 @@
-import { S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand,HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException, UnauthorizedException,Injectable } from "@nestjs/common";
 
@@ -63,5 +63,16 @@ export class S3Service{
             console.error('S3 delete error:', error);
             throw new BadRequestException('failed to delete file');
         }
+    }
+
+    async getFileHead(Filekey:string){
+        
+        let command=new HeadObjectCommand({
+            Bucket:process.env.S3_BUCKET,
+            Key:Filekey,
+        })
+
+        let response=await this.s3Client.send(command);
+        return response;
     }
 }

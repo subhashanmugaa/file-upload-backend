@@ -3,11 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
-import { UsersController } from './users/users.controller';
-import { UsersService } from './users/users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-
+import { BullModule } from '@nestjs/bullmq';
 @Module({
   imports:[ConfigModule.forRoot({isGlobal:true}),TypeOrmModule.forRoot(
     {
@@ -20,7 +18,14 @@ import { ConfigModule } from '@nestjs/config';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize:true
     }
-  ),UsersModule, FilesModule],
+  ),
+  BullModule.forRoot({
+    connection:{
+      host:'localhost',
+      port:6379
+    }
+  }),
+  UsersModule, FilesModule],
   controllers: [AppController],
   providers: [AppService],
 })
