@@ -25,11 +25,11 @@ export class FileProcessor extends WorkerHost {
         return;
     }
 
-    let response=await this.s3Service.getFileHead(file!.name);
+    let response=await this.s3Service.getFileHead(file.storageKey);
 
     const s3Etag = response.ETag?.replace(/"/g, '');
 
-    if(file.etag!==String(s3Etag)){
+    if(!s3Etag || file.etag !== s3Etag){
         file.status='FAILED';
         await this.fileRepository.save(file!);
         return;
@@ -43,7 +43,7 @@ export class FileProcessor extends WorkerHost {
     if (!allowedTypes.includes(extension!)) {
       file.status = 'INVALID';
       await this.fileRepository.save(file!);
-      await this.s3Service.deleteFile(file!.name);
+      await this.s3Service.deleteFile(file.storageKey);
       console.log("Invalid file type");
       return;
     }

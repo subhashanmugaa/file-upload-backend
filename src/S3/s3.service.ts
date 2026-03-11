@@ -1,4 +1,4 @@
-import { S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand,HeadObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand,HeadObjectCommand,ListObjectVersionsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException, UnauthorizedException,Injectable } from "@nestjs/common";
 
@@ -74,5 +74,19 @@ export class S3Service{
 
         let response=await this.s3Client.send(command);
         return response;
+    }
+
+    async getFileVersions(storageKey: string) {
+        try {
+            const command = new ListObjectVersionsCommand({
+                Bucket: this.bucketName,
+                Prefix: storageKey,
+            });
+            const result = await this.s3Client.send(command);
+            return result.Versions ?? [];
+        } catch(error) {
+            console.error('S3 list versions error:', error);
+            throw new BadRequestException(`Failed to list versions: ${error.message}`);
+        }
     }
 }
