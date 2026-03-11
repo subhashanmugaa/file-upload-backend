@@ -1,13 +1,15 @@
 import { User } from "src/users/entities/user.entity";
-import {Entity,PrimaryGeneratedColumn,Column, ManyToOne, JoinColumn,CreateDateColumn} from "typeorm"
+import {Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn} from "typeorm"
 
 type Status="UPLOADING"|"PROCESSING"|"COMPLETED"|"FAILED"|"INVALID"
 
-
 @Entity()
 export class File {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn({type:'int'})
     id:number;
+
+    @PrimaryColumn({type:'int'})
+    version:number;
 
     @Column({type:'varchar',length:50,nullable:false})
     name:string;
@@ -31,7 +33,10 @@ export class File {
     @JoinColumn({name:"user_id"})
     user:User;
 
-    @Column({nullable:true,type:'varchar'})
+    @Column({nullable:true,type:'varchar', unique:true})
     storageKey:string;
+
+    @Column({type:'boolean',default:true})
+    isLatest:boolean;
 
 }

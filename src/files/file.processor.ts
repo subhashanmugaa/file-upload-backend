@@ -4,7 +4,6 @@ import { S3Service } from 'src/S3/s3.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { File } from 'src/files/entities/file.entity';
 import {Repository} from 'typeorm'
-import { NotFoundException } from '@nestjs/common';
 
 @Processor('file-processing-queue')
 export class FileProcessor extends WorkerHost {
@@ -16,12 +15,17 @@ export class FileProcessor extends WorkerHost {
 
   async process(job: Job) {
 
-    console.log("Processing file:", job.data.fileId);
+    console.log(`Processing file: ${job.data.fileId} v${job.data.version}`);
 
-    let file=await this.fileRepository.findOne({where:{id:job.data.fileId}})
+    let file=await this.fileRepository.findOne({
+      where:{
+        id:job.data.fileId,
+        version:job.data.version,
+      }
+    })
 
     if(!file) {
-        console.log("File not found. It might have been deleted.");
+        console.log("File version not found. It might have been deleted.");
         return;
     }
 
@@ -32,6 +36,7 @@ export class FileProcessor extends WorkerHost {
     if(!s3Etag || file.etag !== s3Etag){
         file.status='FAILED';
         await this.fileRepository.save(file!);
+    console.log(`File processing failed for ${file.id} v${file.version}: ETag mismatch`);
         return;
     }
 
@@ -44,7 +49,7 @@ export class FileProcessor extends WorkerHost {
       file.status = 'INVALID';
       await this.fileRepository.save(file!);
       await this.s3Service.deleteFile(file.storageKey);
-      console.log("Invalid file type");
+      console.log(`Invalid file type for ${file.id} v${file.version}`);
       return;
     }
 
@@ -52,6 +57,6 @@ export class FileProcessor extends WorkerHost {
     file.status='COMPLETED';
     await this.fileRepository.save(file!);
 
-    console.log("File processed");
+    console.log(`File processed: ${file.id} v${file.version}`);
   }
 }

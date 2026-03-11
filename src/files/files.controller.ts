@@ -45,8 +45,8 @@ export class FilesController {
       limit ? parseInt(limit) : 10,
       sortBy ?? 'createdAt',
       order ?? 'DESC',
-      filter ?? 'status',
-      filterValue ?? 'COMPLETED'
+      filter,
+      filterValue
     );
   }
 
@@ -82,7 +82,7 @@ export class FilesController {
 
   @ApiOperation({ summary: 'Generate a presigned S3 URL to update a file (creates a new version)' })
   @ApiParam({ name: 'id', description: 'File ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Returns a presigned S3 PUT URL for the same storageKey (S3 creates a new version)' })
+  @ApiResponse({ status: 200, description: 'Returns { fileId: number, presignedUrl: string } — new version DB record with incremented version' })
   @ApiResponse({ status: 404, description: 'File not found' })
   @ApiResponse({ status: 409, description: 'Previous upload is not complete' })
   @Get(':id/update-upload-url')
@@ -92,7 +92,7 @@ export class FilesController {
 
   @ApiOperation({ summary: 'Get all versions of a file' })
   @ApiParam({ name: 'id', description: 'File ID (any version)', type: Number })
-  @ApiResponse({ status: 200, description: 'List of all S3 object versions for this file (VersionId, LastModified, Size, ETag, IsLatest)' })
+  @ApiResponse({ status: 200, description: 'List of all DB version records for this file ordered by version ASC' })
   @ApiResponse({ status: 404, description: 'File not found' })
   @Get(':id/versions')
   getVersions(@Param('id', ParseIntPipe) id: number) {
