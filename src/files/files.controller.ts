@@ -23,9 +23,12 @@ export class FilesController {
   @ApiParam({ name: 'id', description: 'User ID', type: Number })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)', example: 10 })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['createdAt', 'name', 'size'], description: 'Field to sort by (default: createdAt)' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['createdAt','name','size'], description: 'Field to sort by (default: createdAt)' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'], description: 'Sort direction (default: DESC)' })
+  @ApiQuery({name:'filter' ,required:false,enum:['name','size','type','createdAt','status'],description:'Filter by field'})
+  @ApiQuery({name:'filterValue',required:false,description:'Value to filter by'})
   @ApiResponse({ status: 200, description: 'Paginated list of files' })
+
   @Get(':id')
   getAllFiles(
     @Param('id', ParseIntPipe) userId: number,
@@ -33,6 +36,8 @@ export class FilesController {
     @Query('limit') limit?: string,
     @Query('sortBy') sortBy?: 'createdAt' | 'name' | 'size',
     @Query('order') order?: 'ASC' | 'DESC',
+    @Query('filter') filter?: 'name' | 'size' | 'type' | 'createdAt' | 'status',
+    @Query('filterValue') filterValue? : string
   ) {
     return this.filesService.findAll(
       userId,
@@ -40,6 +45,8 @@ export class FilesController {
       limit ? parseInt(limit) : 10,
       sortBy ?? 'createdAt',
       order ?? 'DESC',
+      filter ?? 'status',
+      filterValue ?? 'COMPLETED'
     );
   }
 

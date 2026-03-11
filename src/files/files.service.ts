@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
-import { Repository } from 'typeorm';
+import { Repository ,Like,LessThanOrEqual} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { File } from './entities/file.entity';
 import { S3Service } from 'src/S3/s3.service';
 import { User } from 'src/users/entities/user.entity';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+
+
 @Injectable()
 export class FilesService {
 
@@ -35,9 +37,25 @@ export class FilesService {
     return this.s3Service.getPresignedUrlForUpload(newFile.storageKey, newFile.type);
   }
 
-  async findAll(userId: number, page = 1, limit = 10, sortBy: 'createdAt' | 'name' | 'size' = 'createdAt', order: 'ASC' | 'DESC' = 'DESC') {
+  async findAll(userId: number, page = 1, limit = 10, sortBy: 'createdAt' | 'name' | 'size' = 'createdAt', order: 'ASC' | 'DESC' = 'DESC',
+    filter: 'name' | 'size' | 'type' | 'createdAt' | 'status' = 'status', filterValue: string = 'COMPLETED'
+  ) {
+
+    const where: any = {
+      user: { id: userId },
+    };
+    
+    if(filter==='name'){
+      where.name=Like(`%${filterValue}%`)
+    }
+    else if(filter==='size'){
+      where.size=LessThanOrEqual(Number(filterValue))
+    }
+    else{
+      where[filter]=filterValue;
+    }
     const [data, total] = await this.fileRepository.findAndCount({
-      where: { user: { id: userId } },
+      where,
       order: { [sortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
